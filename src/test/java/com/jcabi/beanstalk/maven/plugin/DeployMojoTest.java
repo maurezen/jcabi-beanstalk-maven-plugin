@@ -35,9 +35,9 @@ import org.junit.Test;
  * Test case for {@link DeployMojo} (more detailed test is in maven invoker).
  * @author Yegor Bugayenko (yegor@tpc2.com)
  * @version $Id$
+ * @checkstyle MultipleStringLiteralsCheck (10 lines)
  */
 public final class DeployMojoTest {
-
     /**
      * DeployMojo can skip execution when flag is set.
      * @throws Exception If something is wrong
@@ -48,5 +48,4 @@ public final class DeployMojoTest {
         mojo.setSkip(true);
         mojo.execute();
     }
-
 }

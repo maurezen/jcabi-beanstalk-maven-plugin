@@ -36,7 +36,9 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.jcabi.aspects.Tv;
 import com.jcabi.log.Logger;
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipFile;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Settings;
@@ -52,7 +54,6 @@ import org.slf4j.impl.StaticLoggerBinder;
  * @checkstyle ClassDataAbstractionCoupling (500 lines)
  */
 abstract class AbstractBeanstalkMojo extends AbstractMojo {
-
     /**
      * Setting.xml.
      */
@@ -154,10 +155,15 @@ abstract class AbstractBeanstalkMojo extends AbstractMojo {
                 String.format("WAR file '%s' doesn't exist", this.war)
             );
         }
-        final AWSCredentials creds = new ServerCredentials(
-            this.settings,
-            this.server
-        );
+        try {
+            new WarFile(new ZipFile(this.war)).checkEbextensionsValidity();
+        } catch (final IOException ex) {
+            throw new MojoFailureException(
+                ".ebextensions validity check failed",
+                ex
+            );
+        }
+        final AWSCredentials creds = this.createServerCredentials();
         final AWSElasticBeanstalk ebt = new AWSElasticBeanstalkClient(creds);
         try {
             this.exec(
@@ -181,6 +187,19 @@ abstract class AbstractBeanstalkMojo extends AbstractMojo {
         } finally {
             ebt.shutdown();
         }
+    }
+
+    /**
+     * Creates server crecentials.
+     * @return Server credentials based on settings and server attributes.
+     * @throws MojoFailureException Thrown in case of error.
+     */
+    protected ServerCredentials createServerCredentials()
+        throws MojoFailureException {
+        return new ServerCredentials(
+            this.settings,
+            this.server
+        );
     }
 
     /**
@@ -248,5 +267,4 @@ abstract class AbstractBeanstalkMojo extends AbstractMojo {
             Logger.info(this, ">> %s", line);
         }
     }
-
 }
